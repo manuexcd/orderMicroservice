@@ -1,0 +1,18 @@
+server:
+  port: 8089
+  ssl:
+    enabled: false
+    
+spring: 
+   mail:
+     host: smtp.gmail.com
+     port: 587
+     username: manuexcd
+     password: vnhfonbmhfilsfac
+     properties:
+        mail:
+           smtp:
+              auth: true
+              starttls:
+                 enable: true
+                 required: true

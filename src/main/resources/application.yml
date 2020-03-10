@@ -1,0 +1,32 @@
+spring:
+   application:
+      name: orderMicroservice
+   mail:
+      host: smtp.gmail.com
+      port: 587
+      username: manuexcd
+      password: vnhfonbmhfilsfac
+      properties:
+         mail:
+            smtp:
+               auth: true
+               starttls:
+                  enable: true
+                  required: true
+   jpa:
+      database: mysql
+      hibernate:
+         ddl-auto: update
+         dialect: org.hibernate.dialect.MySQL5Dialect
+   datasource:
+      url: jdbc:mysql://localhost:3306/order_microservice?autoReconnect=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      username: tfg
+      password: tfg
+server:
+   port: 8080
+   ssl:
+      enabled: false
+      key-password: password
+      key-store: classpath:keystore.jks
+      key-store-password: password
+      
