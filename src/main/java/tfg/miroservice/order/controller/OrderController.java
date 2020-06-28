@@ -143,21 +143,22 @@ public class OrderController {
 	public ResponseEntity<OrderDTO> confirmTemporalOrder(@RequestHeader HttpHeaders headers,
 			@RequestBody OrderDTO dto) {
 		try {
-			Order order = mapper.mapDtoToEntity(dto);
 			List<ProductDTO> listProductDto = new ArrayList<>();
-			order.getOrderLines().stream().forEach(line -> {
-				ProductDTO product = this.getProduct(headers, line.getProductId());
+			dto.getOrderLines().forEach(lineDto -> {
+				ProductDTO product = this.getProduct(headers, lineDto.getProductId());
 				listProductDto.add(product);
-				if (product.getStockAvailable() >= line.getQuantity())
-					product.setStockAvailable(product.getStockAvailable() - line.getQuantity());
+				if (product.getStockAvailable() >= lineDto.getQuantity())
+					product.setStockAvailable(product.getStockAvailable() - lineDto.getQuantity());
 				else
 					product.setStockAvailable(0);
-				HttpEntity<String> entityPut = new HttpEntity<>(product.toString(), headers);
-				restTemplate.put(productUrl.concat(String.valueOf(line.getProductId())), product, entityPut);
+				HttpEntity<ProductDTO> entityPut = new HttpEntity<>(product, headers);
+				restTemplate.exchange(productUrl, HttpMethod.PUT, entityPut, ProductDTO.class);
 			});
 
-			return new ResponseEntity<>(mapper.mapEntityToDto(orderManager.confirmTemporalOrder(order,
-					this.getUserEmail(headers, order.getUserId()), listProductDto)), HttpStatus.CREATED);
+			return new ResponseEntity<>(
+					mapper.mapEntityToDto(orderManager.confirmTemporalOrder(orderManager.getOrder(dto.getId()),
+							this.getUserEmail(headers, dto.getUserId()), listProductDto)),
+					HttpStatus.CREATED);
 		} catch (OrderNotFoundException e) {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
@@ -202,6 +203,8 @@ public class OrderController {
 		HttpHeaders restTemplateHeaders = new HttpHeaders();
 		restTemplateHeaders.set(Constants.HEADER_AUTHORIZATION, token.get(0));
 		HttpEntity<String> entity = new HttpEntity<>(restTemplateHeaders);
+
+		System.out.println(headers.toString());
 
 		return restTemplate
 				.exchange(productUrl.concat(String.valueOf(productId)), HttpMethod.GET, entity, ProductDTO.class)

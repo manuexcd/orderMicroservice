@@ -262,7 +262,6 @@ public class OrderControllerTest {
 		orderDto.setId(Long.valueOf(1));
 		orderDto.setUserId(Long.valueOf(1));
 		orderDto.setOrderLines(Arrays.asList(lineDto));
-		given(mapper.mapDtoToEntity(any())).willReturn(order);
 		given(restTemplate.exchange(anyString(), any(), any(), (Class<ProductDTO>) any(Class.class)))
 				.willAnswer(new Answer<Object>() {
 					private int count = 0;
@@ -298,7 +297,6 @@ public class OrderControllerTest {
 		productDto.setStockAvailable(Integer.valueOf(0));
 		UserDTO userDto = new UserDTO();
 		userDto.setEmail("");
-		given(mapper.mapDtoToEntity(any())).willReturn(order);
 		given(restTemplate.exchange(anyString(), any(), any(), (Class<ProductDTO>) any(Class.class)))
 				.willAnswer(new Answer<Object>() {
 					private int count = 0;
@@ -311,9 +309,14 @@ public class OrderControllerTest {
 					}
 				});
 		ObjectMapper obj = new ObjectMapper();
-		mvc.perform(put("/orders/temporal").header("Authorization", "token")
-				.content(obj.writeValueAsString(new OrderDTO())).contentType(APPLICATION_JSON))
-				.andExpect(status().is2xxSuccessful());
+		OrderDTO orderDto = new OrderDTO();
+		OrderLineDTO lineDto = new OrderLineDTO();
+		lineDto.setId(Long.valueOf(1));
+		lineDto.setProductId(Long.valueOf(1));
+		lineDto.setQuantity(1);
+		orderDto.setOrderLines(Arrays.asList(lineDto));
+		mvc.perform(put("/orders/temporal").header("Authorization", "token").content(obj.writeValueAsString(orderDto))
+				.contentType(APPLICATION_JSON)).andExpect(status().is2xxSuccessful());
 	}
 
 	@Test
@@ -335,7 +338,6 @@ public class OrderControllerTest {
 		productDto.setStockAvailable(Integer.valueOf(100));
 		UserDTO userDto = new UserDTO();
 		userDto.setEmail("");
-		given(mapper.mapDtoToEntity(any())).willReturn(order);
 		given(restTemplate.exchange(anyString(), any(), any(), (Class<ProductDTO>) any(Class.class)))
 				.willAnswer(new Answer<Object>() {
 					private int count = 0;
@@ -348,10 +350,15 @@ public class OrderControllerTest {
 					}
 				});
 		ObjectMapper obj = new ObjectMapper();
+		OrderDTO orderDto = new OrderDTO();
+		OrderLineDTO lineDto = new OrderLineDTO();
+		lineDto.setId(Long.valueOf(1));
+		lineDto.setProductId(Long.valueOf(1));
+		lineDto.setQuantity(1);
+		orderDto.setOrderLines(Arrays.asList(lineDto));
 		given(service.confirmTemporalOrder(any(), anyString(), any())).willThrow(new OrderNotFoundException());
-		mvc.perform(put("/orders/temporal").header("Authorization", "token")
-				.content(obj.writeValueAsString(new OrderDTO())).contentType(APPLICATION_JSON))
-				.andExpect(status().isNotFound());
+		mvc.perform(put("/orders/temporal").header("Authorization", "token").content(obj.writeValueAsString(orderDto))
+				.contentType(APPLICATION_JSON)).andExpect(status().isNotFound());
 	}
 
 	@Test
