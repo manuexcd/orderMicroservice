@@ -46,13 +46,35 @@ public class OrderLineServiceTest {
 	}
 
 	@Test
-	public void testDeleteOrderLine() throws OrderLineNotFoundException, OrderNotFoundException {
+	public void testDeleteOrderLineAndOrder() throws OrderLineNotFoundException, OrderNotFoundException {
 		Order order = new Order();
 		order.setId(Long.valueOf(1));
 		OrderLine orderLine = new OrderLine();
 		orderLine.setOrder(order);
 		List<OrderLine> list = new ArrayList<>();
 		list.add(orderLine);
+		order.setOrderLines(list);
+		dao.save(orderLine);
+		Long id = Long.valueOf(1);
+		given(dao.existsById(id)).willReturn(true);
+		given(dao.getOne(id)).willReturn(orderLine);
+		given(orderService.getOrder(anyLong())).willReturn(order);
+		service.deleteOrderLine(id, "", Collections.emptyList());
+		given(dao.existsById(id)).willReturn(false);
+		assertFalse(dao.existsById(id));
+	}
+
+	@Test
+	public void testDeleteOrderLine() throws OrderLineNotFoundException, OrderNotFoundException {
+		Order order = new Order();
+		order.setId(Long.valueOf(1));
+		OrderLine orderLine = new OrderLine();
+		orderLine.setOrder(order);
+		OrderLine orderLine2 = new OrderLine();
+		orderLine2.setOrder(order);
+		List<OrderLine> list = new ArrayList<>();
+		list.add(orderLine);
+		list.add(orderLine2);
 		order.setOrderLines(list);
 		dao.save(orderLine);
 		Long id = Long.valueOf(1);

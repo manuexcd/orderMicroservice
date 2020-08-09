@@ -33,7 +33,10 @@ public class OrderLineServiceImpl implements OrderLineService {
 			OrderLine line = repository.getOne(id);
 			Order order = orderService.getOrder(line.getOrder().getId());
 			order.getOrderLines().remove(line);
-			orderService.updateOrder(order, userEmail, listProductDto);
+			if(order.getOrderLines().isEmpty())
+				orderService.deleteOrder(order.getId());
+			else
+				orderService.updateOrder(order, userEmail, listProductDto);
 			repository.deleteById(id);
 		} else {
 			throw new OrderLineNotFoundException();

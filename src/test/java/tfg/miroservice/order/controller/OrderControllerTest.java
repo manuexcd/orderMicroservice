@@ -1,6 +1,7 @@
 package tfg.miroservice.order.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -22,6 +23,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -36,6 +38,7 @@ import tfg.miroservice.order.dto.OrderLineDTO;
 import tfg.miroservice.order.dto.ProductDTO;
 import tfg.miroservice.order.dto.UserDTO;
 import tfg.miroservice.order.exception.OrderNotFoundException;
+import tfg.miroservice.order.exception.UserNotFoundException;
 import tfg.miroservice.order.mapper.OrderLineMapper;
 import tfg.miroservice.order.mapper.OrderMapper;
 import tfg.miroservice.order.model.Order;
@@ -62,6 +65,8 @@ public class OrderControllerTest {
 	@Mock
 	private RestTemplate restTemplate;
 
+	private Pageable pageRequest;
+
 	@Before
 	public void setup() {
 		mvc = MockMvcBuilders.standaloneSetup(controller).build();
@@ -78,13 +83,38 @@ public class OrderControllerTest {
 	}
 
 	@Test
-	public void testGetAllOrdersByOrderStatus() throws Exception {
-		mvc.perform(get("/orders/status").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	public void testGetAllOrdersDateAsc() throws Exception {
+		mvc.perform(get("/orders/dateasc?userId=").contentType(APPLICATION_JSON)).andExpect(status().isOk());
 	}
 
 	@Test
-	public void testGetAllOrdersByUserNotFound() throws Exception {
-		mvc.perform(get("/orders/user/1").contentType(APPLICATION_JSON)).andExpect(status().isNotFound());
+	public void testGetAllOrdersByUserDateAsc() throws Exception {
+		mvc.perform(get("/orders/dateasc?userId=1").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	}
+
+	@Test
+	public void testGetAllOrdersDateDesc() throws Exception {
+		mvc.perform(get("/orders/datedesc?userId=").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	}
+
+	@Test
+	public void testGetAllOrdersByUserDateDesc() throws Exception {
+		mvc.perform(get("/orders/datedesc?userId=1").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	}
+
+	@Test
+	public void testGetAllOrdersParam() throws Exception {
+		mvc.perform(get("/orders/param/aaa?userId=").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	}
+
+	@Test
+	public void testGetAllOrdersByUserParam() throws Exception {
+		mvc.perform(get("/orders/param/aaa?userId=1").contentType(APPLICATION_JSON)).andExpect(status().isOk());
+	}
+
+	@Test
+	public void testGetAllOrdersByOrderStatus() throws Exception {
+		mvc.perform(get("/orders/status").contentType(APPLICATION_JSON)).andExpect(status().isOk());
 	}
 
 	@Test
@@ -122,7 +152,7 @@ public class OrderControllerTest {
 
 	@Test
 	public void testGetTemporalOrderException() throws Exception {
-		given(service.getTemporalOrder(anyLong(), any())).willThrow(OrderNotFoundException.class);
+		given(service.getTemporalOrder(anyLong())).willThrow(OrderNotFoundException.class);
 		mvc.perform(get("/orders/temporal?userId=1").contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
 	}
 

@@ -22,6 +22,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		http.csrf().disable();
 		http.authorizeRequests().antMatchers(HttpMethod.GET, "/orders").authenticated();
 		http.authorizeRequests().antMatchers(HttpMethod.GET, "/orders/**").authenticated();
+		http.authorizeRequests().antMatchers(HttpMethod.GET, "/lines/**").authenticated();
+		http.authorizeRequests().antMatchers(HttpMethod.DELETE, "/lines/**").authenticated();
 		http.addFilter(new JWTAuthorizationFilter(authenticationManager()));
 	}
 

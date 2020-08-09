@@ -29,7 +29,6 @@ import tfg.miroservice.order.dto.OrderLineDTO;
 import tfg.miroservice.order.dto.ProductDTO;
 import tfg.miroservice.order.dto.UserDTO;
 import tfg.miroservice.order.exception.OrderNotFoundException;
-import tfg.miroservice.order.exception.UserNotFoundException;
 import tfg.miroservice.order.mapper.OrderLineMapper;
 import tfg.miroservice.order.mapper.OrderMapper;
 import tfg.miroservice.order.model.Constants;
@@ -62,14 +61,14 @@ public class OrderController {
 	@GetMapping
 	public ResponseEntity<Page<OrderDTO>> getAllOrders(@RequestParam Long userId,
 			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_PAGE) int page,
-			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) throws UserNotFoundException {
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) {
 		if (userId != null)
 			return new ResponseEntity<>(
 					mapper.mapEntityPageToDtoPage(orderManager.getOrdersByUser(userId, PageRequest.of(page, pageSize))),
 					HttpStatus.OK);
 		else
 			return new ResponseEntity<>(
-					mapper.mapEntityPageToDtoPage(orderManager.getAllOrdersByDate(PageRequest.of(page, pageSize))),
+					mapper.mapEntityPageToDtoPage(orderManager.getAllOrdersByDateAsc(PageRequest.of(page, pageSize))),
 					HttpStatus.OK);
 	}
 
@@ -80,6 +79,51 @@ public class OrderController {
 		return new ResponseEntity<>(
 				mapper.mapEntityPageToDtoPage(orderManager.getAllOrdersByOrderStatus(PageRequest.of(page, pageSize))),
 				HttpStatus.OK);
+	}
+
+	@GetMapping(value = Constants.PATH_DATE_ASC)
+	public ResponseEntity<Page<OrderDTO>> getAllOrdersByDateAsc(@RequestParam Long userId,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_PAGE) int page,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) {
+		if (userId != null)
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(
+							orderManager.getOrdersByUserDateAsc(userId, PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
+		else
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(orderManager.getAllOrdersByDateAsc(PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
+	}
+
+	@GetMapping(value = Constants.PATH_DATE_DESC)
+	public ResponseEntity<Page<OrderDTO>> getAllOrdersByDateDesc(@RequestParam Long userId,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_PAGE) int page,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) {
+		if (userId != null)
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(
+							orderManager.getOrdersByUserDateDesc(userId, PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
+		else
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(orderManager.getAllOrdersByDateDesc(PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
+	}
+
+	@GetMapping(value = Constants.PATH_PARAM + Constants.PARAM)
+	public ResponseEntity<Page<OrderDTO>> getOrdersByParam(@RequestParam Long userId, @PathVariable String param,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_PAGE) int page,
+			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) {
+		if (userId != null)
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(
+							orderManager.getOrdersByParamAndUser(param, userId, PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
+		else
+			return new ResponseEntity<>(
+					mapper.mapEntityPageToDtoPage(orderManager.getOrdersByParam(param, PageRequest.of(page, pageSize))),
+					HttpStatus.OK);
 	}
 
 	@GetMapping(value = Constants.PARAM_ID + Constants.PATH_ORDERLINES)
@@ -103,13 +147,9 @@ public class OrderController {
 	}
 
 	@GetMapping(value = Constants.PATH_TEMPORAL)
-	public ResponseEntity<OrderDTO> getTemporalOrder(@RequestParam Long userId,
-			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_PAGE) int page,
-			@RequestParam(defaultValue = Constants.PAGINATION_DEFAULT_SIZE) int pageSize) {
+	public ResponseEntity<OrderDTO> getTemporalOrder(@RequestParam Long userId) {
 		try {
-			return new ResponseEntity<>(
-					mapper.mapEntityToDto(orderManager.getTemporalOrder(userId, PageRequest.of(page, pageSize))),
-					HttpStatus.OK);
+			return new ResponseEntity<>(mapper.mapEntityToDto(orderManager.getTemporalOrder(userId)), HttpStatus.OK);
 		} catch (OrderNotFoundException e) {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}
@@ -203,8 +243,6 @@ public class OrderController {
 		HttpHeaders restTemplateHeaders = new HttpHeaders();
 		restTemplateHeaders.set(Constants.HEADER_AUTHORIZATION, token.get(0));
 		HttpEntity<String> entity = new HttpEntity<>(restTemplateHeaders);
-
-		System.out.println(headers.toString());
 
 		return restTemplate
 				.exchange(productUrl.concat(String.valueOf(productId)), HttpMethod.GET, entity, ProductDTO.class)

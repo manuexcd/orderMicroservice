@@ -14,13 +14,9 @@ public class OrderTest {
 	@Test
 	public void updatePrice() {
 		Order order = new Order();
-//		Product product = new Product();
-//		product.setPrice(100);
 		OrderLine orderLine = new OrderLine();
-//		orderLine.setProduct(product);
-		orderLine.setQuantity(2);
+		orderLine.setQuantity(0);
 		order.setOrderLines(Arrays.asList(orderLine));
-//		order.updatePrice();
 		assertTrue(order.getTotalPrice() == 0);
 	}
 }

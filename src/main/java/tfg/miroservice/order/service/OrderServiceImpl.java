@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import tfg.miroservice.order.dto.ProductDTO;
 import tfg.miroservice.order.exception.OrderNotFoundException;
-import tfg.miroservice.order.exception.UserNotFoundException;
 import tfg.miroservice.order.mail.MailSender;
 import tfg.miroservice.order.model.Constants;
 import tfg.miroservice.order.model.Order;
@@ -41,8 +41,13 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Page<Order> getAllOrdersByDate(Pageable page) {
+	public Page<Order> getAllOrdersByDateAsc(Pageable page) {
 		return orders.findAllByOrderByDate(page);
+	}
+
+	@Override
+	public Page<Order> getAllOrdersByDateDesc(Pageable page) {
+		return orders.findAllByOrderByDateDesc(page);
 	}
 
 	@Override
@@ -51,8 +56,28 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Page<Order> getOrdersByUser(Long userId, Pageable page) throws UserNotFoundException {
+	public Page<Order> getOrdersByUser(Long userId, Pageable page) {
 		return orders.findByUserId(userId, page);
+	}
+
+	@Override
+	public Page<Order> getOrdersByUserDateAsc(Long userId, Pageable page) {
+		return orders.findByUserIdOrderByDate(userId, page);
+	}
+
+	@Override
+	public Page<Order> getOrdersByUserDateDesc(Long userId, Pageable page) {
+		return orders.findByUserIdOrderByDateDesc(userId, page);
+	}
+
+	@Override
+	public Page<Order> getOrdersByParam(String param, Pageable page) {
+		return orders.findByParam(param, page);
+	}
+
+	@Override
+	public Page<Order> getOrdersByParamAndUser(String param, long userId, Pageable page) {
+		return orders.findByParamAndUser(param, userId, page);
 	}
 
 	@Override
@@ -61,9 +86,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Order getTemporalOrder(Long userId, Pageable page) throws OrderNotFoundException {
-		List<Order> list = orders.findByUserId(userId, page)
-				.filter(order -> order.getOrderStatus().equals(Constants.ORDER_STATUS_TEMPORAL)).toList();
+	public Order getTemporalOrder(Long userId) throws OrderNotFoundException {
+		List<Order> list = orders.findByUserId(userId).stream()
+				.filter(order -> order.getOrderStatus().equals(Constants.ORDER_STATUS_TEMPORAL))
+				.collect(Collectors.toList());
 		if (!list.isEmpty())
 			return list.get(0);
 		else
@@ -81,7 +107,8 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Order confirmTemporalOrder(Order order, String userEmail, List<ProductDTO> listProductDto) throws OrderNotFoundException {
+	public Order confirmTemporalOrder(Order order, String userEmail, List<ProductDTO> listProductDto)
+			throws OrderNotFoundException {
 		if (orders.existsById(order.getId())) {
 			order.setDate(new Timestamp(System.currentTimeMillis()));
 			order.setOrderStatus(Constants.ORDER_STATUS_RECEIVED);
@@ -100,14 +127,18 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Order updateOrder(Order order, String userEmail, List<ProductDTO> listProductDto) throws OrderNotFoundException {
+	public Order updateOrder(Order order, String userEmail, List<ProductDTO> listProductDto)
+			throws OrderNotFoundException {
 		if (orders.existsById(order.getId())) {
 			order.getOrderLines().stream().forEach(line -> line.setOrder(order));
 			order.setTotalPrice(this.calcOrderPrice(order, listProductDto));
-			Map<Object, Object> params = new HashMap<>();
-			params.put(Constants.TEMPLATE_PARAM_ORDER_ID, order.getId());
-			params.put(Constants.TEMPLATE_PARAM_ORDER_STATUS, order.getOrderStatus());
-			mailSender.sendEmail(userEmail, Constants.SUBJECT_ORDER_UPDATED, Constants.TEMPLATE_ORDER_UPDATED, params);
+			if (!order.getOrderStatus().equals(Constants.ORDER_STATUS_TEMPORAL)) {
+				Map<Object, Object> params = new HashMap<>();
+				params.put(Constants.TEMPLATE_PARAM_ORDER_ID, order.getId());
+				params.put(Constants.TEMPLATE_PARAM_ORDER_STATUS, order.getOrderStatus());
+				mailSender.sendEmail(userEmail, Constants.SUBJECT_ORDER_UPDATED, Constants.TEMPLATE_ORDER_UPDATED,
+						params);
+			}
 			return orders.save(order);
 		} else {
 			throw new OrderNotFoundException();

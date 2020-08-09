@@ -1,13 +1,14 @@
 package tfg.miroservice.order.service;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,9 +22,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import tfg.miroservice.order.dto.ProductDTO;
 import tfg.miroservice.order.exception.OrderNotFoundException;
 import tfg.miroservice.order.exception.UserNotFoundException;
 import tfg.miroservice.order.mail.MailSender;
@@ -59,9 +60,39 @@ public class OrderServiceTest {
 	}
 
 	@Test
-	public void testGetAllOrdersByDate() {
+	public void testGetAllOrdersByDateDesc() {
+		given(dao.findAllByOrderByDateDesc(pageRequest)).willReturn(Page.empty());
+		assertNotNull(service.getAllOrdersByDateDesc(pageRequest));
+	}
+
+	@Test
+	public void testGetAllOrdersByUserDateDesc() throws UserNotFoundException {
+		given(dao.findByUserIdOrderByDateDesc(anyLong(), eq(pageRequest))).willReturn(Page.empty());
+		assertNotNull(service.getOrdersByUserDateDesc(anyLong(), eq(pageRequest)));
+	}
+
+	@Test
+	public void testGetAllOrdersByDateAsc() {
 		given(dao.findAllByOrderByDate(pageRequest)).willReturn(Page.empty());
-		assertNotNull(service.getAllOrdersByDate(pageRequest));
+		assertNotNull(service.getAllOrdersByDateAsc(pageRequest));
+	}
+
+	@Test
+	public void testGetAllOrdersByUserDateAsc() throws UserNotFoundException {
+		given(dao.findByUserIdOrderByDate(anyLong(), eq(pageRequest))).willReturn(Page.empty());
+		assertNotNull(service.getOrdersByUserDateAsc(anyLong(), eq(pageRequest)));
+	}
+
+	@Test
+	public void testGetOrdersByParam() throws UserNotFoundException {
+		given(dao.findByParam(anyString(), eq(pageRequest))).willReturn(Page.empty());
+		assertNotNull(service.getOrdersByParam(anyString(), eq(pageRequest)));
+	}
+
+	@Test
+	public void testGetOrdersByParamAndUser() throws UserNotFoundException {
+		given(dao.findByParamAndUser(anyString(), anyLong(), eq(pageRequest))).willReturn(Page.empty());
+		assertNotNull(service.getOrdersByParamAndUser(anyString(), anyLong(), eq(pageRequest)));
 	}
 
 	@Test
@@ -94,15 +125,14 @@ public class OrderServiceTest {
 	public void testGetTemporalOrder() throws OrderNotFoundException {
 		Order order = new Order();
 		order.setOrderLines(Arrays.asList(new OrderLine()));
-		Page<Order> page = new PageImpl<>((Arrays.asList(order)));
-		given(dao.findByUserId(anyLong(), any())).willReturn(page);
-		assertNotNull(service.getTemporalOrder(anyLong(), any()));
+		given(dao.findByUserId(anyLong())).willReturn(Arrays.asList(order));
+		assertNotNull(service.getTemporalOrder(anyLong()));
 	}
 
 	@Test(expected = OrderNotFoundException.class)
 	public void testGetEmptyTemporalOrder() throws OrderNotFoundException {
-		given(dao.findByUserId(anyLong(), any())).willReturn(Page.empty());
-		assertNotNull(service.getTemporalOrder(anyLong(), any()));
+		given(dao.findByUserId(anyLong())).willReturn(Arrays.asList());
+		assertNotNull(service.getTemporalOrder(anyLong()));
 	}
 
 	@Test
@@ -115,7 +145,7 @@ public class OrderServiceTest {
 	}
 
 	@Test
-	public void testUpdateOrder() throws OrderNotFoundException {
+	public void testUpdateTemporalOrder() throws OrderNotFoundException {
 		Order order = new Order();
 		OrderLine line = new OrderLine();
 		line.setProductId(Long.valueOf(1));
@@ -128,6 +158,48 @@ public class OrderServiceTest {
 		given(dao.existsById(any())).willReturn(Boolean.TRUE);
 		given(dao.save(order)).willReturn(order);
 		assertNotNull(service.updateOrder(order, "", Collections.emptyList()));
+	}
+
+	@Test
+	public void testUpdateOrder() throws OrderNotFoundException {
+		Order order = new Order();
+		OrderLine line = new OrderLine();
+		line.setProductId(Long.valueOf(1));
+		line.setQuantity(2);
+		List<OrderLine> list = new ArrayList<>();
+		list.add(line);
+		order.setUserId(Long.valueOf(1));
+		order.setOrderStatus(Constants.ORDER_STATUS_TEMPORAL);
+		order.setOrderLines(list);
+		ProductDTO product = new ProductDTO();
+		product.setId(Long.valueOf(1));
+		product.setPrice(Double.valueOf(11));
+		List<ProductDTO> listProducts = new ArrayList<>();
+		listProducts.add(product);
+		given(dao.existsById(any())).willReturn(Boolean.TRUE);
+		given(dao.save(order)).willReturn(order);
+		assertNotNull(service.updateOrder(order, "", listProducts));
+	}
+	
+	@Test
+	public void testUpdateOrder2() throws OrderNotFoundException {
+		Order order = new Order();
+		OrderLine line = new OrderLine();
+		line.setProductId(Long.valueOf(1));
+		line.setQuantity(2);
+		List<OrderLine> list = new ArrayList<>();
+		list.add(line);
+		order.setUserId(Long.valueOf(1));
+		order.setOrderStatus(Constants.ORDER_STATUS_TEMPORAL);
+		order.setOrderLines(list);
+		ProductDTO product = new ProductDTO();
+		product.setId(Long.valueOf(2));
+		product.setPrice(Double.valueOf(11));
+		List<ProductDTO> listProducts = new ArrayList<>();
+		listProducts.add(product);
+		given(dao.existsById(any())).willReturn(Boolean.TRUE);
+		given(dao.save(order)).willReturn(order);
+		assertNotNull(service.updateOrder(order, "", listProducts));
 	}
 
 	@Test(expected = OrderNotFoundException.class)
