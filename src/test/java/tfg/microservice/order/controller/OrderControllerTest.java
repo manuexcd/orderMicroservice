@@ -1,7 +1,6 @@
 package tfg.microservice.order.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -23,7 +22,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -33,13 +31,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tfg.microservice.order.controller.OrderController;
 import tfg.microservice.order.dto.OrderDTO;
 import tfg.microservice.order.dto.OrderLineDTO;
 import tfg.microservice.order.dto.ProductDTO;
 import tfg.microservice.order.dto.UserDTO;
 import tfg.microservice.order.exception.OrderNotFoundException;
-import tfg.microservice.order.exception.UserNotFoundException;
 import tfg.microservice.order.mapper.OrderLineMapper;
 import tfg.microservice.order.mapper.OrderMapper;
 import tfg.microservice.order.model.Order;
