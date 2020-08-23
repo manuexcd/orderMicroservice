@@ -24,9 +24,4 @@ spring:
       password: tfg
 server:
    port: 8080
-   ssl:
-      enabled: false
-      key-password: password
-      key-store: classpath:keystore.jks
-      key-store-password: password
       
