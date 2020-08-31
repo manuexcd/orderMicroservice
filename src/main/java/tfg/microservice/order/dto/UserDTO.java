@@ -24,7 +24,7 @@ public class UserDTO implements Serializable {
 	@ToString.Exclude
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
-	private ImageDTO userImage;
+	private String imageUrl;
 	private List<String> roles;
 	private Boolean confirmed;
 }
